@@ -9,10 +9,11 @@ import android.view.WindowMetrics
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.LifecycleOwner
-import app.fitness.fitpal.R
-import app.fitness.fitpal.utils.getAdSizeAds
-import app.fitness.fitpal.utils.hideView
-import app.fitness.fitpal.utils.showView
+import app.example.R
+import app.example.ui.activity.MainActivity
+import app.example.utils.getAdSizeAds
+import app.example.utils.hideView
+import app.example.utils.showView
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdLoader
 import com.google.android.gms.ads.AdRequest
@@ -216,6 +217,7 @@ class AdmobAds(private val context: Context) : LifecycleEventObserver {
         val adLoader =
             AdLoader.Builder(context, context.getString(R.string.native_test_ads_id))
                 .forNativeAd { nativeAd ->
+                    mNativeAd?.destroy()
                     mNativeAd = nativeAd
 
                     if (!isViewActive) return@forNativeAd
@@ -239,9 +241,18 @@ class AdmobAds(private val context: Context) : LifecycleEventObserver {
     }
 
     override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
-        Log.d(TAG, "onStateChanged: $event")
+        Log.d(TAG, "onStateChanged: ${source.javaClass.simpleName} -> $event")
         if (event == Lifecycle.Event.ON_DESTROY) {
             isViewActive = false
+            if (source is MainActivity) {
+                Log.d(TAG, "onStateChanged: source is MainActivity, destroying ads")
+                mNativeAd?.destroy()
+                mNativeAd = null
+                interstitialAdDefault = null
+                interstitialAdSplash = null
+                isInterstitialSplashLoading = false
+                isInterstitialDefaultLoading = false
+            }
         }
     }
 }
